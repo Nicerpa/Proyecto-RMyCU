@@ -1,7 +1,9 @@
 from paho.mqtt import client as mqtt_client
 import random
+import csv
+import matplotlib.pyplot as plt
 
-broker = '34.228.255.141'
+broker = 'localhost'
 port = 1883
 topic = "/topico"
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
@@ -19,12 +21,19 @@ def connect_mqtt():
     return client
 
 def subscribe(client: mqtt_client):
+
+    f_name = "data_sub_"+client_id+".csv"
+    f = open(f_name, 'a')
     # esta funcion es lo que se quiere hacer con la data
     def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        mensaje = msg.payload.decode()
+        print(msg.payload.decode())
+        f.write(mensaje)
 
+    
     client.subscribe(topic)
     client.on_message = on_message
+
 
 def run():
     client = connect_mqtt()

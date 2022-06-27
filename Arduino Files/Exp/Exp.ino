@@ -16,10 +16,14 @@ const int analogInPin3 = A2;
 float voltage1, voltage2, voltage3;
 unsigned long initial_time, first_time, fourth_time;
 float first_difference_float, fourth_difference_float;
-unsigned int period = 50;
+unsigned int period = 250;
 const int ledPin = 22;
 const int ledPin2 = 23;
 const int ledPin3 = 24;
+float old_temp = 0;
+float old_hum = 0;
+float old_pres = 0;
+
 
 
 void setup(){
@@ -40,6 +44,9 @@ void setup(){
   // Chequear que los sensores esten funcionando
   if (!BARO.begin()){while (1);}
   if (!HTS.begin()){while (1);}
+
+    
+
   /*-------------------------------*/
 
   PhyphoxBLE::start(board_name);  // Activar la placa Arduino
@@ -72,12 +79,37 @@ void setup(){
   humidityGraph.setLabelY("Humedad");
   humidityGraph.setChannel(1,3);
   
+  PhyphoxBleExperiment::ExportSet dataset;       
+  dataset.setLabel("DataSet");
+  PhyphoxBleExperiment::ExportData dataTmpr;
+  dataTmpr.setLabel("Temperature");
+  dataTmpr.setDatachannel(2);
+  PhyphoxBleExperiment::ExportData dataHmdt;
+  dataHmdt.setLabel("Humidity");
+  dataHmdt.setDatachannel(3);
+  PhyphoxBleExperiment::ExportData dataPrss;
+  dataPrss.setLabel("Pressure");
+  dataPrss.setDatachannel(4);
+  PhyphoxBleExperiment::ExportData dataTime;
+  dataTime.setLabel("Time");
+  dataTime.setDatachannel(1);
+  
    /*Añadir elementos a la vista y el experimento al servidor de phyphox*/
   myView.addElement(humidityGraph);
   myView.addElement(temperatureGraph);
   myView.addElement(pressureGraph);
   myExperiment.addView(myView);
+  dataset.addElement(dataTime); 
+  dataset.addElement(dataTmpr);
+  dataset.addElement(dataHmdt); 
+  dataset.addElement(dataPrss); 
+  myExperiment.addExportSet(dataset);  
   PhyphoxBLE::addExperiment(myExperiment);
+
+
+  
+
+  
 }
 
 void loop(){
@@ -99,8 +131,13 @@ void SensorReading() {
     first_time = millis();
     temperature = HTS.readTemperature();
     humidity = HTS.readHumidity();
-    pressure = BARO.readPressure();
+    pressure = BARO.readPressure();    
     first_difference_float = ((float)first_time-(float)initial_time)/1000;
+    if (abs(old_temp - temperature) >= 0.5 || abs(old_hum -humidity) >= 1 || abs(old_pres - pressure) >= 0.1){
+      old_temp = temperature;
+      old_hum =  humidity;
+      old_pres =  pressure;
+    }
     PhyphoxBLE::write(first_difference_float, temperature, humidity, pressure);
   }
 }

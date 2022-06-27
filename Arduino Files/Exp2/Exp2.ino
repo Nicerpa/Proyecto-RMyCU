@@ -13,7 +13,7 @@ const int analogInPin3 = A2;
 float voltage1, voltage2, voltage3;
 unsigned long initial_time, first_time, fourth_time;
 float first_difference_float, fourth_difference_float;
-unsigned int period = 50;
+unsigned int period = 250;
 const int ledPin = 22;
 const int ledPin2 = 23;
 const int ledPin3 = 24;
